@@ -4,12 +4,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/values/colors.dart';
 import '../controllers/history_controller.dart';
+import 'package:get_storage/get_storage.dart';
+import '../../../routes/app_pages.dart';
 
 class HistoryView extends GetView<HistoryController> {
   const HistoryView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final bool isGuest = GetStorage().read('token') == null;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -26,7 +30,9 @@ class HistoryView extends GetView<HistoryController> {
         automaticallyImplyLeading:
             false, // Since it's a tab, no back button usually
       ),
-      body: Obx(() {
+      body: isGuest
+          ? _buildLoginRequiredPlaceholder()
+          : Obx(() {
         if (controller.isLoading.value && controller.historyList.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -274,5 +280,76 @@ class HistoryView extends GetView<HistoryController> {
     if (status == 'Rujuk') return Colors.blue;
     if (status == 'Meninggal') return Colors.black;
     return Colors.grey;
+  }
+
+  Widget _buildLoginRequiredPlaceholder() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.lock_person_outlined,
+                color: AppColors.primary,
+                size: 64,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Akses Terbatas',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Silakan masuk ke akun Rekam Medis Anda untuk melihat riwayat pemeriksaan dan pengobatan.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  final box = GetStorage();
+                  box.remove('is_guest');
+                  Get.offAllNamed(Routes.LOGIN);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Masuk Sekarang',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

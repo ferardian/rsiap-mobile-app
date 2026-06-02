@@ -720,7 +720,7 @@ class RegisterView extends GetView<RegisterController> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Data Anda telah tersimpan di sistem kami. Harap simpan Kode Registrasi di bawah ini:',
+              'Data Anda telah tersimpan di sistem kami. Harap simpan Nomor Rekam Medis (RM) di bawah ini:',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(color: AppColors.textSecondary),
             ),

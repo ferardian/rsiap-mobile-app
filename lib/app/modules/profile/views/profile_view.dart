@@ -4,12 +4,16 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/values/colors.dart';
 import '../controllers/profile_controller.dart';
 import 'family_member_view.dart';
+import 'package:get_storage/get_storage.dart';
+import '../../../routes/app_pages.dart';
 
 class ProfileView extends GetView<ProfileController> {
   const ProfileView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final bool isGuest = GetStorage().read('token') == null;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -25,18 +29,20 @@ class ProfileView extends GetView<ProfileController> {
         centerTitle: true,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
-        child: Column(
-          children: [
-            _buildProfileCard(),
-            const SizedBox(height: 24),
-            _buildInfoSection(),
-            const SizedBox(height: 24),
-            _buildActionSection(),
-          ],
-        ),
-      ),
+      body: isGuest
+          ? _buildLoginRequiredPlaceholder()
+          : SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
+              child: Column(
+                children: [
+                  _buildProfileCard(),
+                  const SizedBox(height: 24),
+                  _buildInfoSection(),
+                  const SizedBox(height: 24),
+                  _buildActionSection(),
+                ],
+              ),
+            ),
     );
   }
 
@@ -260,17 +266,7 @@ class ProfileView extends GetView<ProfileController> {
             _buildActionItem(
               icon: Icons.info_outline,
               title: 'Tentang Aplikasi',
-              onTap: () {
-                Get.defaultDialog(
-                  title: 'Tentang RSIAP Mobile',
-                  middleText: 'Versi 1.0.0\n© 2025 RSIA Aisyiyah Pekajangan',
-                  confirmTextColor: Colors.white,
-                  onConfirm: () => Get.back(),
-                  titleStyle: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                  middleTextStyle: GoogleFonts.poppins(),
-                  radius: 16,
-                );
-              },
+              onTap: () => _showAboutDialog(),
             ),
           ],
         ),
@@ -372,6 +368,249 @@ class ProfileView extends GetView<ProfileController> {
               Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showAboutDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Beautiful Gradient Icon Container
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.primary, AppColors.primary.withOpacity(0.7)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.local_hospital_rounded,
+                  color: Colors.white,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // App Title
+              Text(
+                'RSIAP Mobile',
+                style: GoogleFonts.poppins(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              
+              // Tagline
+              Text(
+                'Pendaftaran Online & Layanan Informasi',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Info Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  children: [
+                    _buildDialogInfoRow(
+                      label: 'Versi Aplikasi',
+                      value: '1.0.0',
+                    ),
+                    const Divider(height: 20, color: Colors.grey),
+                    _buildDialogInfoRow(
+                      label: 'Developer',
+                      value: 'IT RSIA Aisyiyah Pekajangan',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // Copyright
+              Text(
+                '© 2026 RSIA Aisyiyah Pekajangan',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: Colors.grey[500],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Tutup Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    shadowColor: AppColors.primary.withOpacity(0.3),
+                  ),
+                  child: Text(
+                    'Tutup',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDialogInfoRow({required String label, required String value}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12.5,
+            color: Colors.grey[500],
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: GoogleFonts.poppins(
+              fontSize: 12.5,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginRequiredPlaceholder() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.lock_person_outlined,
+                color: AppColors.primary,
+                size: 64,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Akses Terbatas',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Silakan masuk ke akun Rekam Medis Anda untuk menggunakan fitur profil dan pengelolaan keluarga.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  final box = GetStorage();
+                  box.remove('is_guest');
+                  Get.offAllNamed(Routes.LOGIN);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Masuk Sekarang',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () => _showAboutDialog(),
+              child: Text(
+                'Tentang Aplikasi',
+                style: GoogleFonts.poppins(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

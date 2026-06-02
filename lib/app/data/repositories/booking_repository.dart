@@ -7,6 +7,19 @@ class BookingRepository {
 
   BookingRepository(this._apiService);
 
+  // Fetch Poliklinik list
+  Future<List<dynamic>> fetchPolikliniks() async {
+    try {
+      final response = await _apiService.client.post(
+        'public/poliklinik/search',
+        data: {},
+      );
+      return response.data['data'] ?? [];
+    } on DioException catch (e) {
+      throw e.response?.data ?? {'message': e.message};
+    }
+  }
+
   // Fetch Schedules (Jadwal Dokter)
   Future<List<dynamic>> fetchSchedules(
     List<String> kodePoli,

@@ -40,32 +40,40 @@ class DashboardView extends GetView<DashboardController> {
               ),
             ],
           ),
-          child: SalomonBottomBar(
-            currentIndex: controller.selectedIndex.value,
-            onTap: controller.changeTabIndex,
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            items: [
-              /// Home
-              SalomonBottomBarItem(
-                icon: const Icon(Icons.home_outlined),
-                title: const Text("Beranda"),
-                selectedColor: AppColors.primary,
+          child: MediaQuery(
+            data: MediaQuery.of(context).copyWith(
+              padding: MediaQuery.of(context).padding.copyWith(
+                top: 0,
+                bottom: 0,
               ),
+            ),
+            child: SalomonBottomBar(
+              currentIndex: controller.selectedIndex.value,
+              onTap: controller.changeTabIndex,
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              items: [
+                /// Home
+                SalomonBottomBarItem(
+                  icon: const Icon(Icons.home_outlined),
+                  title: const Text("Beranda"),
+                  selectedColor: AppColors.primary,
+                ),
 
-              /// History
-              SalomonBottomBarItem(
-                icon: const Icon(Icons.history_outlined),
-                title: const Text("Riwayat"),
-                selectedColor: Colors.orange,
-              ),
+                /// History
+                SalomonBottomBarItem(
+                  icon: const Icon(Icons.history_outlined),
+                  title: const Text("Riwayat"),
+                  selectedColor: Colors.orange,
+                ),
 
-              /// Profile
-              SalomonBottomBarItem(
-                icon: const Icon(Icons.person_outline),
-                title: const Text("Profil"),
-                selectedColor: Colors.teal,
-              ),
-            ],
+                /// Profile
+                SalomonBottomBarItem(
+                  icon: const Icon(Icons.person_outline),
+                  title: const Text("Profil"),
+                  selectedColor: Colors.teal,
+                ),
+              ],
+            ),
           ),
         ),
       ),

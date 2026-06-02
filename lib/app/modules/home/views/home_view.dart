@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:rsiap_mobile_app/app/routes/app_pages.dart';
 import '../../../../core/values/colors.dart';
 import './widgets/queue_detail_sheet.dart';
 import '../controllers/home_controller.dart';
 import '../../../common/widgets/loading_dots.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
+import 'package:get_storage/get_storage.dart';
 
 // Keep this if needed or remove since removing nav bar.
 // actually removing unused imports is better.
@@ -34,16 +37,14 @@ class HomeView extends GetView<HomeController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildModernHeader(context),
-                const SizedBox(
-                  height: 32.5,
-                ), // Adjusted from 75 to account for Stack height increase
-                _buildQuickActions(),
                 const SizedBox(height: 20),
+                _buildQuickActions(),
+                const SizedBox(height: 12),
                 _buildActiveAppointments(),
                 _buildArticlesSection(),
                 const SizedBox(height: 24),
                 _buildFacilitiesSection(),
-                const SizedBox(height: 40),
+                const SizedBox(height: 130),
               ],
             ),
           ),
@@ -110,13 +111,21 @@ class HomeView extends GetView<HomeController> {
           Positioned(
             top: MediaQuery.of(context).padding.top + 20,
             right: 20,
-            child: Container(
-              padding: const EdgeInsets.all(2),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Obx(() {
+            child: GestureDetector(
+              onTap: () {
+                if (GetStorage().read('token') == null) {
+                  _showLoginRequiredDialog(context);
+                } else {
+                  Get.find<DashboardController>().changeTabIndex(2);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Obx(() {
                 final name = controller.user.value?.nama ?? 'User';
                 final initials = name
                     .trim()
@@ -158,6 +167,7 @@ class HomeView extends GetView<HomeController> {
                 );
               }),
             ),
+          ),
           ),
 
           // Patient Greeting
@@ -235,7 +245,13 @@ class HomeView extends GetView<HomeController> {
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => Get.toNamed('/booking'),
+                  onTap: () {
+                    if (GetStorage().read('token') == null) {
+                      _showLoginRequiredDialog(context);
+                      return;
+                    }
+                    Get.toNamed('/booking');
+                  },
                   borderRadius: BorderRadius.circular(16),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -291,43 +307,76 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _buildQuickActions() {
+    final actions = [
+      {
+        'label': 'ANTRIAN\nPOLI',
+        'icon': Icons.query_stats_rounded,
+        'color': const Color(0xFFE91E63),
+        'route': '/poli-queue',
+      },
+      {
+        'label': 'JADWAL\nDOKTER',
+        'icon': Icons.calendar_month_rounded,
+        'color': Colors.green,
+        'route': '/schedule',
+      },
+      {
+        'label': 'POLIKLINIK',
+        'icon': Icons.business_rounded,
+        'color': Colors.cyan,
+        'route': '/booking',
+      },
+      {
+        'label': 'HASIL LAB',
+        'icon': Icons.biotech_rounded,
+        'color': Colors.orange,
+        'route': '/lab',
+      },
+      {
+        'label': 'RADIOLOGI',
+        'icon': Icons.image_search_rounded,
+        'color': Colors.indigo,
+        'route': '/radiology',
+      },
+      {
+        'label': 'IMUNISASI',
+        'icon': Icons.vaccines_rounded,
+        'color': Colors.pink,
+        'route': '/vaccination',
+      },
+    ];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildActionItem(
-            'ANTRIAN\nPOLI',
-            Icons.query_stats_rounded,
-            const Color(0xFFE91E63),
-            onTap: () => Get.toNamed('/poli-queue'),
-          ),
-          _buildActionItem(
-            'JADWAL\nDOKTER',
-            Icons.calendar_month_rounded,
-            Colors.green,
-            onTap: () => Get.toNamed('/schedule'),
-          ),
-          _buildActionItem(
-            'POLIKLINIK',
-            Icons.business_rounded,
-            Colors.cyan,
-            onTap: () => Get.toNamed('/booking'),
-          ),
-          _buildActionItem(
-            'HASIL LAB',
-            Icons.biotech_rounded,
-            Colors.orange,
-            onTap: () => Get.toNamed('/lab'),
-          ),
-          _buildActionItem(
-            'RADIOLOGI',
-            Icons.image_search_rounded,
-            Colors.indigo,
-            onTap: () => Get.toNamed('/radiology'),
-          ),
-        ],
+      child: GridView.builder(
+        padding: EdgeInsets.zero,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          childAspectRatio: 0.9,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 8,
+        ),
+        itemCount: actions.length,
+        itemBuilder: (context, index) {
+          final item = actions[index];
+          return _buildActionItem(
+            item['label'] as String,
+            item['icon'] as IconData,
+            item['color'] as Color,
+            onTap: () {
+              final route = item['route'] as String;
+              if (route == '/booking' || route == '/lab' || route == '/radiology' || route == '/vaccination') {
+                if (GetStorage().read('token') == null) {
+                  _showLoginRequiredDialog(context);
+                  return;
+                }
+              }
+              Get.toNamed(route);
+            },
+          );
+        },
       ),
     );
   }
@@ -340,19 +389,21 @@ class HomeView extends GetView<HomeController> {
   }) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 50,
-            height: 50,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(color: color.withOpacity(0.5), width: 1.5),
+              border: Border.all(color: color.withOpacity(0.3), width: 1.5),
               boxShadow: [
                 BoxShadow(
                   color: color.withOpacity(0.1),
-                  blurRadius: 8,
+                  blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
               ],
@@ -360,17 +411,17 @@ class HomeView extends GetView<HomeController> {
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 8),
-          SizedBox(
-            height: 30,
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+              height: 1.2,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -536,6 +587,69 @@ class HomeView extends GetView<HomeController> {
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      // Date & Time Row
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_today_rounded,
+                                            size: 12,
+                                            color: Colors.grey[500],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            DateFormat(
+                                              'dd MMM yyyy',
+                                              'id_ID',
+                                            ).format(
+                                              DateTime.parse(
+                                                appointment['tgl_registrasi'],
+                                              ),
+                                            ),
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 11,
+                                              color: Colors.grey[600],
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Icon(
+                                            Icons.access_time_rounded,
+                                            size: 12,
+                                            color: Colors.grey[500],
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Builder(
+                                            builder: (context) {
+                                              String jamPraktek = '-';
+                                              if (appointment['jadwal_enrich'] !=
+                                                  null) {
+                                                final jadwal =
+                                                    appointment['jadwal_enrich'];
+                                                final mulai =
+                                                    (jadwal['jam_mulai'] ?? '')
+                                                        .toString()
+                                                        .substring(0, 5);
+                                                final selesai =
+                                                    (jadwal['jam_selesai'] ??
+                                                            '')
+                                                        .toString()
+                                                        .substring(0, 5);
+                                                jamPraktek =
+                                                    '$mulai - $selesai';
+                                              }
+                                              return Text(
+                                                jamPraktek,
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 11,
+                                                  color: Colors.grey[600],
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -784,12 +898,13 @@ class HomeView extends GetView<HomeController> {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: GridView.builder(
+              padding: EdgeInsets.zero,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 0.85,
-                crossAxisSpacing: 10,
+                crossAxisCount: 2,
+                childAspectRatio: 2.7,
+                crossAxisSpacing: 12,
                 mainAxisSpacing: 10,
               ),
               itemCount: controller.facilities.length,
@@ -845,58 +960,58 @@ class HomeView extends GetView<HomeController> {
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: primaryColor.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: primaryColor.withOpacity(0.04),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Material(
-        color: Colors.white,
+        color: primaryColor.withOpacity(0.06),
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: primaryColor.withOpacity(0.1), width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: primaryColor.withOpacity(0.12), width: 1.2),
         ),
         child: InkWell(
           onTap: () => _showComingSoon(),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           splashColor: primaryColor.withOpacity(0.12),
           highlightColor: Colors.transparent,
           focusColor: Colors.transparent,
           hoverColor: Colors.transparent,
           splashFactory: InkRipple.splashFactory,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+            child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryColor.withOpacity(0.12),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  child: Icon(icon, color: primaryColor, size: 30),
+                  child: Icon(icon, color: primaryColor, size: 20),
                 ),
-                const SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                const SizedBox(width: 10),
+                Expanded(
                   child: Text(
                     label,
-                    textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
-                      fontSize: 10.5,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w600,
                       color: Colors.grey[800],
                       height: 1.2,
@@ -948,6 +1063,106 @@ class HomeView extends GetView<HomeController> {
       ],
       isDismissible: true,
       forwardAnimationCurve: Curves.easeOutBack,
+    );
+  }
+
+  void _showLoginRequiredDialog(BuildContext context) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock_outline_rounded,
+                  color: AppColors.primary,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Akses Terbatas',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Silakan masuk dengan akun Rekam Medis Anda untuk menggunakan fitur ini.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      child: Text(
+                        'Batal',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back();
+                        final box = GetStorage();
+                        box.remove('is_guest');
+                        Get.offAllNamed(Routes.LOGIN);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Masuk',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

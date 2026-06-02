@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:in_app_update/in_app_update.dart'; // For In-App Updates
 import 'package:flutter/foundation.dart'; // For kDebugMode
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:convert';
 import '../../../../app/data/services/firebase_api.dart';
@@ -18,6 +19,8 @@ import '../../../../app/data/repositories/appointment_repository.dart';
 import '../../../../app/data/repositories/slider_repository.dart';
 import '../../../../app/data/repositories/article_repository.dart';
 import '../../../../app/data/repositories/facility_repository.dart';
+import '../../../../app/data/repositories/vaccination_repository.dart';
+import '../../../../app/services/notification_service.dart';
 import '../../../routes/app_pages.dart';
 
 class HomeController extends GetxController {
@@ -56,13 +59,23 @@ class HomeController extends GetxController {
     _loadUser();
 
     // Subscribe to topic based on user role/status
-    FirebaseMessaging.instance.subscribeToTopic('pasien');
-    if (user.value?.noRkmMedis != null) {
-      final topicName = "pasien_${user.value!.noRkmMedis.replaceAll('/', '')}";
-      FirebaseMessaging.instance.subscribeToTopic(topicName);
-      print("📡 FCM: Subscribed to user topic: $topicName");
+    if (Firebase.apps.isNotEmpty) {
+      () async {
+        try {
+          await FirebaseMessaging.instance.subscribeToTopic('pasien');
+          if (user.value?.noRkmMedis != null) {
+            final topicName = "pasien_${user.value!.noRkmMedis.replaceAll('/', '')}";
+            await FirebaseMessaging.instance.subscribeToTopic(topicName);
+            print("📡 FCM: Subscribed to user topic: $topicName");
+          } else {
+            print("⚠️ FCM: Could not subscribe to user topic (RM is null)");
+          }
+        } catch (e) {
+          print("⚠️ FCM: Failed to subscribe: $e");
+        }
+      }();
     } else {
-      print("⚠️ FCM: Could not subscribe to user topic (RM is null)");
+      print("📡 FCM: Skip subscription: Firebase is not initialized");
     }
 
     _setGreeting();
@@ -70,7 +83,9 @@ class HomeController extends GetxController {
     _fetchAppointments();
     _fetchSliders();
     _fetchArticles();
+    _fetchArticles();
     _fetchFacilities();
+    _initVaccinationReminders();
 
     // Update time every minute
     Timer.periodic(const Duration(minutes: 1), (timer) => _updateTime());
@@ -132,7 +147,52 @@ class HomeController extends GetxController {
       _fetchAppointments(),
       _fetchSliders(),
       _fetchArticles(),
+      _initVaccinationReminders(),
     ]);
+  }
+
+  Future<void> _initVaccinationReminders() async {
+    if (user.value == null) return;
+
+    try {
+      // 1. Get User/Child Data
+      // Simplified: Just use the main user or first family member logic from VaccinationController
+      String noRkmMedis = user.value!.noRkmMedis;
+      String tglLahir = user.value!.tglLahir;
+      String childName = user.value!.nama;
+
+      // Check family members
+      try {
+        final familyData = await _familyService.fetchFamilyMembers();
+        if (familyData.isNotEmpty) {
+          // Use first child for now (matching VaccinationController default)
+          final firstChild = familyData.first;
+          noRkmMedis = firstChild['no_rkm_medis'];
+          tglLahir = firstChild['tgl_lahir'];
+          childName = firstChild['nm_pasien'];
+        }
+      } catch (e) {
+        // Ignore, use main user
+      }
+
+      // 2. Fetch History
+      final repo = Get.put(VaccinationRepository());
+      final vaccines = await repo.getVaccinationHistory(
+        noRkmMedis,
+        tglLahir.split(' ')[0],
+      );
+
+      // 3. Schedule
+      final ns = NotificationService();
+      // Ensure permissions are requested (might need to be careful not to spam dialog on startup if not needed)
+      // For now, let's assume permissions are requested elsewhere or we just schedule silently if allowed.
+      // await ns.requestPermissions();
+
+      await ns.scheduleVaccinationReminders(vaccines, childName);
+      print("💉 Vaccination reminders scheduled for $childName");
+    } catch (e) {
+      print("Error initializing vaccination reminders: $e");
+    }
   }
 
   Future<void> _scheduleAppointmentNotifications(

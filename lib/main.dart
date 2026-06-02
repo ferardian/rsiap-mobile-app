@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:rsiap_mobile_app/app/services/notification_service.dart';
 import 'package:rsiap_mobile_app/app/data/services/firebase_api.dart';
 
 void main() async {
@@ -16,11 +17,22 @@ void main() async {
 
   try {
     await Firebase.initializeApp();
-    await FirebaseApi().initNotif();
-    print("🚀 Firebase Notification Service Started");
+    print("🚀 Firebase Initialized Successfully");
   } catch (e) {
     print("Firebase Initialization Failed: $e");
-    // Continue running app even if Firebase fails (likely due to missing google-services.json)
+  }
+
+  try {
+    await FirebaseApi().initNotif();
+    print("🚀 Notification Service Started");
+  } catch (e) {
+    print("Failed to start Notification Services: $e");
+  }
+
+  try {
+    await NotificationService().init();
+  } catch (e) {
+    print("Notification Service Initialization Failed: $e");
   }
 
   SystemChrome.setSystemUIOverlayStyle(

@@ -31,6 +31,67 @@ class BookingController extends GetxController {
   var isLoadingSchedules = false.obs;
   var isLoadingSubmit = false.obs;
 
+  // Dynamic Poliklinik List
+  var poliklinikList = <Map<String, dynamic>>[].obs;
+  var isLoadingPoli = false.obs;
+  var isErrorPoli = false.obs;
+
+  Future<void> fetchPoliklinikList() async {
+    isLoadingPoli.value = true;
+    isErrorPoli.value = false;
+    poliklinikList.clear();
+
+    try {
+      final rawPolikliniks = await _repository.fetchPolikliniks();
+      
+      final anakCodes = <String>[];
+      final kandunganCodes = <String>[];
+
+      for (var poli in rawPolikliniks) {
+        final status = poli['status']?.toString() ?? '0';
+        if (status != '1') continue;
+
+        final nmPoli = (poli['nm_poli'] ?? '').toString().toLowerCase();
+        final kdPoli = (poli['kd_poli'] ?? '').toString();
+
+        if (nmPoli.contains('anak') || nmPoli.contains('bayi') || nmPoli.contains('bbl')) {
+          anakCodes.add(kdPoli);
+        } else if (nmPoli.contains('kandungan') || nmPoli.contains('kebidanan') || nmPoli.contains('obgyn')) {
+          kandunganCodes.add(kdPoli);
+        }
+      }
+
+      final List<Map<String, dynamic>> mappedList = [];
+
+      if (anakCodes.isNotEmpty) {
+        mappedList.add({
+          'title': 'Poliklinik Anak',
+          'icon': Icons.child_care,
+          'color': Colors.blue,
+          'description': 'Layanan kesehatan khusus anak.',
+          'kode_poli': anakCodes,
+        });
+      }
+
+      if (kandunganCodes.isNotEmpty) {
+        mappedList.add({
+          'title': 'Poliklinik Kandungan',
+          'icon': Icons.pregnant_woman,
+          'color': Colors.pink,
+          'description': 'Layanan kesehatan ibu dan kandungan.',
+          'kode_poli': kandunganCodes,
+        });
+      }
+
+      poliklinikList.assignAll(mappedList);
+    } catch (e) {
+      print("Error fetching polikliniks: $e");
+      isErrorPoli.value = true;
+    } finally {
+      isLoadingPoli.value = false;
+    }
+  }
+
   // Helper to format date
   String get formattedDate =>
       DateFormat('yyyy-MM-dd').format(selectedDate.value);
@@ -53,6 +114,7 @@ class BookingController extends GetxController {
   void onInit() {
     super.onInit();
     fetchFamilyMembers();
+    fetchPoliklinikList();
     // Default to self
     final user = _box.read('user');
     if (user != null) {

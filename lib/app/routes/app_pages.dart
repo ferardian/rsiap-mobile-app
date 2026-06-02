@@ -19,6 +19,8 @@ import '../modules/poli_queue/bindings/poli_queue_binding.dart';
 import '../modules/poli_queue/views/poli_queue_view.dart';
 import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
+import '../modules/vaccination/bindings/vaccination_binding.dart';
+import '../modules/vaccination/views/vaccination_view.dart';
 
 part 'app_routes.dart';
 
@@ -32,6 +34,11 @@ class AppPages {
       name: _Paths.HOME,
       page: () => const DashboardView(),
       binding: DashboardBinding(),
+    ),
+    GetPage(
+      name: _Paths.VACCINATION,
+      page: () => const VaccinationView(),
+      binding: VaccinationBinding(),
     ),
     GetPage(
       name: _Paths.BOOKING,

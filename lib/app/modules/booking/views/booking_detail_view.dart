@@ -165,20 +165,32 @@ class BookingDetailView extends GetView<BookingController> {
                   final doctor = schedule['dokter'];
                   // ignore: unused_local_variable
                   final pegawai = doctor['pegawai'];
+                  final int kuota = int.tryParse(schedule['kuota']?.toString() ?? '0') ?? 0;
+
+                  String formatTime(String? time) {
+                    if (time == null || time.isEmpty) return '-';
+                    return time.length >= 5 ? time.substring(0, 5) : time;
+                  }
+
+                  final isAvailable = kuota > 0;
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isAvailable ? Colors.white : Colors.grey.shade50,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade200),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      border: Border.all(
+                        color: isAvailable ? Colors.grey.shade200 : Colors.grey.shade100,
+                      ),
+                      boxShadow: isAvailable
+                          ? [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : null,
                     ),
                     child: ListTile(
                       contentPadding: const EdgeInsets.all(16),
@@ -186,12 +198,14 @@ class BookingDetailView extends GetView<BookingController> {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: isAvailable
+                              ? AppColors.primary.withOpacity(0.1)
+                              : Colors.grey.shade100,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.person,
-                          color: AppColors.primary,
+                          color: isAvailable ? AppColors.primary : Colors.grey.shade400,
                         ),
                       ),
                       title: Text(
@@ -199,6 +213,7 @@ class BookingDetailView extends GetView<BookingController> {
                         style: GoogleFonts.poppins(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
+                          color: isAvailable ? Colors.black : Colors.grey.shade600,
                         ),
                       ),
                       subtitle: Column(
@@ -206,49 +221,72 @@ class BookingDetailView extends GetView<BookingController> {
                         children: [
                           Text(
                             doctor['spesialis']['nm_sps'],
-                            style: GoogleFonts.poppins(fontSize: 12),
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: isAvailable ? Colors.black87 : Colors.grey.shade500,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.access_time_filled,
                                 size: 14,
-                                color: Colors.green,
+                                color: isAvailable ? Colors.green : Colors.grey.shade400,
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '${schedule['jam_mulai']} - ${schedule['jam_selesai']}',
+                                '${formatTime(schedule['jam_mulai'])} - ${formatTime(schedule['jam_selesai'])}',
                                 style: GoogleFonts.poppins(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.green,
+                                  color: isAvailable ? Colors.green : Colors.grey.shade500,
                                 ),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      trailing: ElevatedButton(
-                        onPressed: () {
-                          controller.selectDoctor(doctor, schedule);
-                          _showPaymentSelectionDialog(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          'Pilih',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                      trailing: isAvailable
+                          ? ElevatedButton(
+                              onPressed: () {
+                                controller.selectDoctor(doctor, schedule);
+                                _showPaymentSelectionDialog(context);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: Text(
+                                'Pilih',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            )
+                          : Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.red.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.red.shade200),
+                              ),
+                              child: Text(
+                                'Tidak Tersedia',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.red.shade700,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10.5,
+                                ),
+                              ),
+                            ),
                     ),
                   );
                 }).toList(),

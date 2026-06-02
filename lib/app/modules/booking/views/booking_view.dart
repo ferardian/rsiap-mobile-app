@@ -10,25 +10,6 @@ class BookingView extends GetView<BookingController> {
 
   @override
   Widget build(BuildContext context) {
-    // Dummy Data for Poliklinik (matching existing app)
-    final List<Map<String, dynamic>> poliklinikList = [
-      {
-        'title': 'Poliklinik Anak',
-        'icon': Icons.child_care,
-        'color': Colors.blue,
-        'kode_poli': ['P003', 'P008'], // Example codes
-        'description': 'Layanan kesehatan khusus anak.',
-      },
-      {
-        'title': 'Poliklinik Kandungan',
-        'icon': Icons.pregnant_woman,
-        'color': Colors.pink,
-        'kode_poli': ['P001', 'P007'],
-        'description': 'Layanan kesehatan ibu dan kandungan.',
-      },
-      // Add more as needed
-    ];
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -46,80 +27,135 @@ class BookingView extends GetView<BookingController> {
           onPressed: () => Get.back(),
         ),
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(20),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16, // mainAxisSpacing restored
-          childAspectRatio: 0.8, // Balanced ratio
-        ),
-        itemCount: poliklinikList.length,
-        itemBuilder: (context, index) {
-          final poli = poliklinikList[index];
-          return Material(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20), // More rounded
-            elevation: 2,
-            shadowColor: Colors.black.withOpacity(0.05),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(20),
-              onTap: () {
-                controller.selectPoli(poli);
-                Get.to(() => const BookingDetailView());
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 16,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: (poli['color'] as Color).withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        poli['icon'] as IconData,
-                        size: 32, // Restored size
-                        color: poli['color'] as Color,
+      body: Obx(() {
+        if (controller.isLoadingPoli.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (controller.isErrorPoli.value) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 60,
+                    color: Colors.red,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Gagal memuat daftar poliklinik',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () => controller.fetchPoliklinikList(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        poli['title'] as String,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.poppins(
-                          fontSize: 15, // Better visibility
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
+                    child: Text(
+                      'Coba Lagi',
+                      style: GoogleFonts.poppins(color: Colors.white),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      poli['description'] as String,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        fontSize: 11.5, // Better visibility
-                        color: AppColors.textSecondary,
-                        height: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           );
-        },
-      ),
+        }
+
+        if (controller.poliklinikList.isEmpty) {
+          return Center(
+            child: Text(
+              'Tidak ada poliklinik aktif saat ini.',
+              style: GoogleFonts.poppins(color: Colors.grey),
+            ),
+          );
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(20),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 0.8,
+          ),
+          itemCount: controller.poliklinikList.length,
+          itemBuilder: (context, index) {
+            final poli = controller.poliklinikList[index];
+            return Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              elevation: 2,
+              shadowColor: Colors.black.withOpacity(0.05),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () {
+                  controller.selectPoli(poli);
+                  Get.to(() => const BookingDetailView());
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 16,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: (poli['color'] as Color).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          poli['icon'] as IconData,
+                          size: 32,
+                          color: poli['color'] as Color,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          poli['title'] as String,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        poli['description'] as String,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.poppins(
+                          fontSize: 11.5,
+                          color: AppColors.textSecondary,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      }),
     );
   }
 }

@@ -45,7 +45,9 @@ class AppointmentRepository {
           "filters": [
             {"field": "no_rkm_medis", "operator": "=", "value": noRkmMedis},
             {"field": "tgl_registrasi", "operator": ">=", "value": today},
-            {"field": "stts", "operator": "=", "value": "Belum"},
+            // Remove 'stts' filter to get all statuses (Belum, Periksa, Sudah, etc.)
+            // We will filter out 'Batal' explicitly if needed, or handle in UI
+            {"field": "stts", "operator": "!=", "value": "Batal"},
           ],
         },
       );

@@ -287,94 +287,110 @@ class QueueDetailSheet extends StatelessWidget {
 
                 const SizedBox(height: 16),
 
-                // Info Grid
-                _buildInfoItem(
-                  Icons.person_outline_rounded,
-                  'Dokter',
-                  appointment['dokter']['nm_dokter'] ?? '-',
-                  isFullWidth: true,
-                ),
-                const SizedBox(height: 8),
-                _buildInfoItem(
-                  Icons.local_hospital_outlined,
-                  'Poliklinik',
-                  appointment['poliklinik']['nm_poli'] ?? '-',
-                  isFullWidth: true,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildInfoItem(
-                        Icons.calendar_today_outlined,
-                        'Tanggal',
-                        DateFormat(
-                          'dd MMM yyyy',
-                          'id_ID',
-                        ).format(DateTime.parse(appointment['tgl_registrasi'])),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Builder(
-                        builder: (context) {
-                          String jamPraktek = '-';
-                          if (appointment['jadwal_enrich'] != null) {
-                            final jadwal = appointment['jadwal_enrich'];
-                            final mulai = (jadwal['jam_mulai'] ?? '')
-                                .toString()
-                                .substring(0, 5);
-                            final selesai = (jadwal['jam_selesai'] ?? '')
-                                .toString()
-                                .substring(0, 5);
-                            jamPraktek = '$mulai - $selesai';
-                          }
-                          return _buildInfoItem(
-                            Icons.access_time_rounded,
-                            'Jam Praktek',
-                            jamPraktek,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Action Buttons
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      _showCancelConfirmation(context);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: BorderSide(color: Colors.red.shade100),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      backgroundColor: Colors.red.shade50,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.delete_outline_rounded, size: 18),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Batalkan Registrasi',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
+                const SizedBox(height: 24),
+                Text(
+                  'Status Antrian',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 16),
+
+                // Timeline Section
+                Builder(
+                  builder: (context) {
+                    final String status = appointment['stts'] ?? 'Belum';
+                    // Status Mapping
+                    // 0: Ruang Tunggu (Belum, Tunggu)
+                    // 1: Poli (Berkas Diterima, Periksa)
+                    // 2: Selesai (Sudah, Dirawat, Pulang)
+                    int currentStep = 0;
+                    if (['Berkas Diterima', 'Periksa'].contains(status)) {
+                      currentStep = 1;
+                    } else if ([
+                      'Sudah',
+                      'Dirawat',
+                      'Pulang',
+                      'Rujuk',
+                    ].contains(status)) {
+                      currentStep = 2;
+                    }
+
+                    return Column(
+                      children: [
+                        _buildTimelineStep(
+                          isFirst: true,
+                          isLast: false,
+                          isActive: currentStep >= 0,
+                          isFinished: currentStep > 0,
+                          title: 'Ruang Tunggu',
+                          subtitle: 'Menunggu giliran dipanggil',
+                          date: DateFormat('dd MMM yyyy').format(
+                            DateTime.parse(appointment['tgl_registrasi']),
+                          ),
+                        ),
+                        _buildTimelineStep(
+                          isFirst: false,
+                          isLast: false,
+                          isActive: currentStep >= 1,
+                          isFinished: currentStep > 1,
+                          title: appointment['poliklinik']['nm_poli'] ?? 'Poli',
+                          subtitle: currentStep == 1
+                              ? 'Pemeriksaan sedang berlangsung'
+                              : 'Dokter: ${appointment['dokter']['nm_dokter'] ?? '-'}',
+                        ),
+                        _buildTimelineStep(
+                          isFirst: false,
+                          isLast: true,
+                          isActive: currentStep >= 2,
+                          isFinished: currentStep >= 2,
+                          title: 'Selesai',
+                          subtitle: 'Pelayanan kesehatan Anda telah selesai',
+                        ),
+                      ],
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 24),
+
+                // Action Buttons
+                if (appointment['stts'] == 'Belum') ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        _showCancelConfirmation(context);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: BorderSide(color: Colors.red.shade100),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        backgroundColor: Colors.red.shade50,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.delete_outline_rounded, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Batalkan Registrasi',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -389,7 +405,7 @@ class QueueDetailSheet extends StatelessWidget {
                       elevation: 0,
                     ),
                     child: Text(
-                      'Selesai',
+                      'Tutup',
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
@@ -405,56 +421,107 @@ class QueueDetailSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoItem(
-    IconData icon,
-    String label,
-    String value, {
-    Color? valueColor,
-    bool isProminent = false,
-    bool isFullWidth = false,
+  Widget _buildTimelineStep({
+    required bool isFirst,
+    required bool isLast,
+    required bool isActive,
+    required bool isFinished,
+    required String title,
+    required String subtitle,
+    String? date,
   }) {
-    return Container(
-      width: isFullWidth ? double.infinity : null,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: isProminent ? Colors.green.shade50 : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isProminent ? Colors.green.shade200 : Colors.grey.shade100,
-          width: isProminent ? 1.5 : 1,
-        ),
-      ),
-      child: Column(
+    return IntrinsicHeight(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          // Timeline Line & Indicator
+          Column(
             children: [
-              Icon(
-                icon,
-                size: 16,
-                color: isProminent ? Colors.green : Colors.grey[400],
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  color: isProminent ? Colors.green.shade800 : Colors.grey[500],
-                  fontWeight: isProminent ? FontWeight.w600 : FontWeight.w500,
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isFinished
+                      ? AppColors.primary
+                      : (isActive ? Colors.white : Colors.grey[200]),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isFinished
+                        ? AppColors.primary
+                        : (isActive ? AppColors.primary : Colors.grey[300]!),
+                    width: 2,
+                  ),
                 ),
+                child: isFinished
+                    ? const Icon(Icons.check, size: 14, color: Colors.white)
+                    : (isActive
+                          ? Center(
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            )
+                          : null),
               ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: isFinished
+                        ? AppColors.primary.withOpacity(0.5)
+                        : Colors.grey[300],
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: isProminent ? 20 : 13,
-              fontWeight: FontWeight.bold,
-              color: valueColor ?? AppColors.textPrimary,
+          const SizedBox(width: 16),
+
+          // Content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: isActive || isFinished
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                      color: isActive || isFinished
+                          ? AppColors.textPrimary
+                          : Colors.grey[500],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  if (date != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      date,
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: Colors.grey[500],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

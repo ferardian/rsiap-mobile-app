@@ -288,6 +288,34 @@ class LoginView extends GetView<LoginController> {
                         ),
                       ),
 
+                      SizedBox(
+                        height: screenHeight * 0.02,
+                      ),
+
+                      // Guest Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 55,
+                        child: OutlinedButton(
+                          onPressed: controller.loginAsGuest,
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.primary, width: 1.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text(
+                            'Masuk Sebagai Tamu',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+
                       const SizedBox(height: 15),
 
                       // Footer

@@ -23,7 +23,14 @@ class FirebaseApi {
 
   bool _isInitialized = false;
 
-  final _firebaseMessaging = FirebaseMessaging.instance;
+  FirebaseMessaging? get _firebaseMessaging {
+    if (Firebase.apps.isEmpty) return null;
+    try {
+      return FirebaseMessaging.instance;
+    } catch (_) {
+      return null;
+    }
+  }
   static bool _exactAlarmDenied = false;
   final Set<String> _processingReseps = {};
   final _localNotification = fln.FlutterLocalNotificationsPlugin();
@@ -37,17 +44,30 @@ class FirebaseApi {
   Future<void> initNotif() async {
     if (_isInitialized) return;
 
-    await _firebaseMessaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      announcement: false,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-    );
+    final fm = _firebaseMessaging;
+    if (fm == null) {
+      print("⚠️ Firebase is not initialized. Skipping push notification setup.");
+      await initLocalNotification();
+      _isInitialized = true;
+      return;
+    }
 
-    initPushNotification();
+    try {
+      await fm.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        announcement: false,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+      );
+
+      await initPushNotification();
+    } catch (e) {
+      print("⚠️ Failed to request permission or init push notification: $e");
+    }
+
     await initLocalNotification();
     _isInitialized = true;
   }
@@ -86,8 +106,10 @@ class FirebaseApi {
   }
 
   Future initPushNotification() async {
-    await FirebaseMessaging.instance
-        .setForegroundNotificationPresentationOptions(
+    final fm = _firebaseMessaging;
+    if (fm == null) return;
+
+    await fm.setForegroundNotificationPresentationOptions(
           alert: true,
           badge: true,
           sound: true,
@@ -95,7 +117,7 @@ class FirebaseApi {
 
     FirebaseMessaging.onBackgroundMessage(handleBackgroundMessage);
 
-    FirebaseMessaging.instance.getInitialMessage().then((initialMessage) {
+    fm.getInitialMessage().then((initialMessage) {
       FirebaseMessaging.onMessageOpenedApp.listen(handleMessage);
       if (initialMessage != null) {
         handleMessage(initialMessage);
@@ -481,17 +503,22 @@ class FirebaseApi {
       await _localNotification.cancelAll();
       print("[FCM] All local notifications cancelled.");
 
-      // 2. Unsubscribe from general patient topic
-      await _firebaseMessaging.unsubscribeFromTopic('pasien');
+      final fm = _firebaseMessaging;
+      if (fm != null) {
+        // 2. Unsubscribe from general patient topic
+        await fm.unsubscribeFromTopic('pasien');
 
-      // 3. Unsubscribe from specific patient topic if user data exists
-      final box = GetStorage();
-      final user = box.read('user');
-      if (user != null && user['no_rkm_medis'] != null) {
-        final rkm = user['no_rkm_medis'].toString().replaceAll('/', '');
-        final topicName = "pasien_$rkm";
-        await _firebaseMessaging.unsubscribeFromTopic(topicName);
-        print("[FCM] Unsubscribed from topic: $topicName");
+        // 3. Unsubscribe from specific patient topic if user data exists
+        final box = GetStorage();
+        final user = box.read('user');
+        if (user != null && user['no_rkm_medis'] != null) {
+          final rkm = user['no_rkm_medis'].toString().replaceAll('/', '');
+          final topicName = "pasien_$rkm";
+          await fm.unsubscribeFromTopic(topicName);
+          print("[FCM] Unsubscribed from topic: $topicName");
+        }
+      } else {
+        print("[FCM] Skip unsubscribe: Firebase not initialized");
       }
     } catch (e) {
       print("[FCM] Error during logout cleanup: $e");
