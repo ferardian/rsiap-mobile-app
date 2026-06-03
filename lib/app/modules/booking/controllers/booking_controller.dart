@@ -230,9 +230,11 @@ class BookingController extends GetxController {
         colorText: Colors.white,
       );
     } catch (e) {
+      print("DEBUG: Booking Error caught: $e");
       String errorMessage = 'Terjadi kesalahan tidak diketahui.';
-      if (e is Map && e.containsKey('message')) {
-        errorMessage = e['message'];
+      
+      if (e is Map) {
+        errorMessage = e['message']?.toString() ?? e['error']?.toString() ?? errorMessage;
       } else {
         errorMessage = e.toString();
       }
