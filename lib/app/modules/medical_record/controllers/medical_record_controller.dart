@@ -122,8 +122,12 @@ class MedicalRecordController extends GetxController {
         final details = item['periksaRadiologi'] as List?;
         if (details != null) {
           matchExam = details.any((detail) {
-            final exam = (detail['kd_jenis_prw'] ?? '').toLowerCase();
-            return exam.contains(query);
+            final examCode = (detail['kd_jenis_prw'] ?? '').toLowerCase();
+            final examName = (detail['jenis_perawatan']?['nm_perawatan'] ??
+                    detail['jenisPerawatan']?['nm_perawatan'] ??
+                    '')
+                .toLowerCase();
+            return examCode.contains(query) || examName.contains(query);
           });
         }
         matchesSearch = matchDokterOrPoli || matchExam;

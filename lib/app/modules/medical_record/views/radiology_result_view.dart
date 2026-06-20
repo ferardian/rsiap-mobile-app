@@ -327,7 +327,7 @@ class RadiologyResultView extends GetView<MedicalRecordController> {
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
-                                              '${rad['kd_jenis_prw'] ?? 'Pemeriksaan'}',
+                                              '${rad['jenis_perawatan']?['nm_perawatan'] ?? rad['jenisPerawatan']?['nm_perawatan'] ?? rad['kd_jenis_prw'] ?? 'Pemeriksaan'}',
                                               style: GoogleFonts.poppins(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.bold,
