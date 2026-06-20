@@ -586,18 +586,7 @@ class RadiologyResultView extends GetView<MedicalRecordController> {
                                                                     actions: [
                                                                       IconButton(
                                                                         icon: const Icon(Icons.download_rounded),
-                                                                        onPressed: () async {
-                                                                          final uri = Uri.parse(url);
-                                                                          if (!await launchUrl(
-                                                                            uri,
-                                                                            mode: LaunchMode.externalApplication,
-                                                                          )) {
-                                                                            Get.snackbar(
-                                                                              'Error',
-                                                                              'Tidak dapat mengunduh gambar',
-                                                                            );
-                                                                          }
-                                                                        },
+                                                                        onPressed: () => controller.downloadRadiologyImage(url),
                                                                       ),
                                                                     ],
                                                                   ),
@@ -675,18 +664,7 @@ class RadiologyResultView extends GetView<MedicalRecordController> {
                                                             ),
                                                           ),
                                                           InkWell(
-                                                            onTap: () async {
-                                                              final uri = Uri.parse(url);
-                                                              if (!await launchUrl(
-                                                                uri,
-                                                                mode: LaunchMode.externalApplication,
-                                                              )) {
-                                                                Get.snackbar(
-                                                                  'Error',
-                                                                  'Tidak dapat mengunduh gambar',
-                                                                );
-                                                              }
-                                                            },
+                                                            onTap: () => controller.downloadRadiologyImage(url),
                                                             child: Padding(
                                                               padding: const EdgeInsets.symmetric(
                                                                 vertical: 6,

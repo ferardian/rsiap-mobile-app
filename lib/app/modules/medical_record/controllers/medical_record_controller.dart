@@ -6,6 +6,10 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import '../../../../core/values/colors.dart';
 import '../../../../app/data/repositories/medical_record_repository.dart';
 import '../../home/controllers/home_controller.dart';
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:gal/gal.dart';
 
 class MedicalRecordController extends GetxController {
   final MedicalRecordRepository _repository;
@@ -381,6 +385,73 @@ class MedicalRecordController extends GetxController {
       Get.snackbar('Error', 'Gagal memuat riwayat radiologi: $e');
     } finally {
       isLoadingRadiology.value = false;
+    }
+  }
+
+  Future<void> downloadRadiologyImage(String url) async {
+    try {
+      // 1. Show a loading overlay
+      Get.dialog(
+        const Center(
+          child: CircularProgressIndicator(
+            color: AppColors.primary,
+          ),
+        ),
+        barrierDismissible: false,
+      );
+
+      // 2. Request / Check Gal permission
+      bool hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        hasAccess = await Gal.requestAccess();
+      }
+
+      if (!hasAccess) {
+        Get.back(); // close loading
+        Get.snackbar(
+          'Izin Ditolak',
+          'Aplikasi membutuhkan izin penyimpanan galeri untuk mengunduh gambar.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      // 3. Download to a temporary file
+      final tempDir = await getTemporaryDirectory();
+      final String tempPath = '${tempDir.path}/radiologi_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      final dio = Dio();
+      await dio.download(url, tempPath);
+
+      // 4. Save to gallery using gal
+      await Gal.putImage(tempPath);
+
+      // Delete temporary file
+      final tempFile = File(tempPath);
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+      }
+
+      Get.back(); // close loading
+      Get.snackbar(
+        'Sukses',
+        'Gambar radiologi berhasil disimpan ke galeri foto Anda.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+      );
+    } catch (e) {
+      Get.back(); // close loading
+      Get.snackbar(
+        'Gagal Mengunduh',
+        'Terjadi kesalahan saat mengunduh gambar: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 }
