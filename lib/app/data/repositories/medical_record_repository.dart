@@ -60,7 +60,7 @@ class MedicalRecordRepository {
         ApiConfig.bookingSearch,
         queryParameters: {
           'include':
-              'periksaRadiologi,dokter,poliklinik,periksaRadiologi.gambarRadiologi',
+              'periksaRadiologi,dokter,poliklinik,periksaRadiologi.gambarRadiologi,periksaRadiologi.hasilRadiologi',
         },
         data: {
           "filters": filters,

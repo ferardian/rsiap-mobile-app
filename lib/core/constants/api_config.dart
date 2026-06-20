@@ -16,10 +16,11 @@ class ApiConfig {
 
   static const String login = 'pasien/auth/login';
   static const String userDetail = 'pasien/auth/detail';
+  static const String forgotAccount = 'pasien/auth/forgot-account';
   static const String bookingSearch = 'registrasi/periksa/search';
   static const String jadwalSearch = 'public/jadwal/search';
-  static const String bookingRegistrasi = 'booking/registrasi';
-  static const String bookingBatal = 'booking/registrasi/batal';
+  static const String bookingRegistrasi = 'registrasi/booking/registrasi';
+  static const String bookingBatal = 'registrasi/booking/registrasi/batal';
   static const String slider = 'slider';
   static const String article = 'article';
   static const String facility = 'facility';

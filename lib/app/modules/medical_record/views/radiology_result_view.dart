@@ -308,6 +308,9 @@ class RadiologyResultView extends GetView<MedicalRecordController> {
                                 final hasImage =
                                     gambarList != null && gambarList.isNotEmpty;
 
+                                final hasilRad = rad['hasil_radiologi'] ?? rad['hasilRadiologi'];
+                                final String hasilText = hasilRad != null ? (hasilRad['hasil'] ?? 'Hasil belum input') : 'Hasil belum input';
+
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
                                   child: Column(
@@ -324,13 +327,35 @@ class RadiologyResultView extends GetView<MedicalRecordController> {
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
-                                              '${rad['kd_jenis_prw'] ?? 'Pemeriksaan'} - ${rad['hasil'] ?? 'Hasil belum input'}',
+                                              '${rad['kd_jenis_prw'] ?? 'Pemeriksaan'}',
                                               style: GoogleFonts.poppins(
                                                 fontSize: 12,
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                           ),
                                         ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 24),
+                                        child: Container(
+                                          width: double.infinity,
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[50],
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: Colors.grey[200]!),
+                                          ),
+                                          child: Text(
+                                            hasilText,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              color: Colors.black87,
+                                              height: 1.5,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                       if (hasImage) ...[
                                         const SizedBox(height: 8),
@@ -537,57 +562,58 @@ class RadiologyResultView extends GetView<MedicalRecordController> {
                                                           ),
                                                         ),
                                                       ),
-                                                      const SizedBox(height: 4),
-                                                      InkWell(
-                                                        onTap: () {
-                                                          Get.to(
-                                                            () => Scaffold(
-                                                              backgroundColor:
-                                                                  Colors.black,
-                                                              appBar: AppBar(
-                                                                backgroundColor:
-                                                                    Colors
-                                                                        .black,
-                                                                iconTheme:
-                                                                    const IconThemeData(
-                                                                      color: Colors
-                                                                          .white,
+                                                      const SizedBox(height: 8),
+                                                      Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          InkWell(
+                                                            onTap: () {
+                                                              Get.to(
+                                                                () => Scaffold(
+                                                                  backgroundColor: Colors.black,
+                                                                  appBar: AppBar(
+                                                                    backgroundColor: Colors.black,
+                                                                    iconTheme: const IconThemeData(
+                                                                      color: Colors.white,
                                                                     ),
-                                                                elevation: 0,
-                                                                title: Text(
-                                                                  'Pratinjau Gambar',
-                                                                  style: GoogleFonts.poppins(
-                                                                    color: Colors
-                                                                        .white,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                              body: Center(
-                                                                child: InteractiveViewer(
-                                                                  panEnabled:
-                                                                      true,
-                                                                  boundaryMargin:
-                                                                      const EdgeInsets.all(
-                                                                        80,
+                                                                    elevation: 0,
+                                                                    title: Text(
+                                                                      'Pratinjau Gambar',
+                                                                      style: GoogleFonts.poppins(
+                                                                        color: Colors.white,
                                                                       ),
-                                                                  minScale: 0.5,
-                                                                  maxScale: 4,
-                                                                  child: Image.network(
-                                                                    url,
-                                                                    loadingBuilder:
-                                                                        (
-                                                                          context,
-                                                                          child,
-                                                                          loadingProgress,
-                                                                        ) {
-                                                                          if (loadingProgress ==
-                                                                              null)
-                                                                            return child;
+                                                                    ),
+                                                                    actions: [
+                                                                      IconButton(
+                                                                        icon: const Icon(Icons.download_rounded),
+                                                                        onPressed: () async {
+                                                                          final uri = Uri.parse(url);
+                                                                          if (!await launchUrl(
+                                                                            uri,
+                                                                            mode: LaunchMode.externalApplication,
+                                                                          )) {
+                                                                            Get.snackbar(
+                                                                              'Error',
+                                                                              'Tidak dapat mengunduh gambar',
+                                                                            );
+                                                                          }
+                                                                        },
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  body: Center(
+                                                                    child: InteractiveViewer(
+                                                                      panEnabled: true,
+                                                                      boundaryMargin: const EdgeInsets.all(80),
+                                                                      minScale: 0.5,
+                                                                      maxScale: 4,
+                                                                      child: Image.network(
+                                                                        url,
+                                                                        loadingBuilder: (context, child, loadingProgress) {
+                                                                          if (loadingProgress == null) return child;
                                                                           return Center(
                                                                             child: CircularProgressIndicator(
-                                                                              value:
-                                                                                  loadingProgress.expectedTotalBytes !=
-                                                                                      null
+                                                                              value: loadingProgress.expectedTotalBytes != null
                                                                                   ? loadingProgress.cumulativeBytesLoaded /
                                                                                         loadingProgress.expectedTotalBytes!
                                                                                   : null,
@@ -595,12 +621,7 @@ class RadiologyResultView extends GetView<MedicalRecordController> {
                                                                             ),
                                                                           );
                                                                         },
-                                                                    errorBuilder:
-                                                                        (
-                                                                          context,
-                                                                          error,
-                                                                          stackTrace,
-                                                                        ) {
+                                                                        errorBuilder: (context, error, stackTrace) {
                                                                           return Center(
                                                                             child: Column(
                                                                               mainAxisAlignment: MainAxisAlignment.center,
@@ -610,9 +631,7 @@ class RadiologyResultView extends GetView<MedicalRecordController> {
                                                                                   color: Colors.white,
                                                                                   size: 48,
                                                                                 ),
-                                                                                const SizedBox(
-                                                                                  height: 8,
-                                                                                ),
+                                                                                const SizedBox(height: 8),
                                                                                 Text(
                                                                                   'Gagal memuat gambar',
                                                                                   style: GoogleFonts.poppins(
@@ -623,42 +642,77 @@ class RadiologyResultView extends GetView<MedicalRecordController> {
                                                                             ),
                                                                           );
                                                                         },
+                                                                      ),
+                                                                    ),
                                                                   ),
                                                                 ),
+                                                                transition: Transition.zoom,
+                                                              );
+                                                            },
+                                                            child: Padding(
+                                                              padding: const EdgeInsets.symmetric(
+                                                                vertical: 6,
+                                                                horizontal: 8,
+                                                              ),
+                                                              child: Row(
+                                                                children: [
+                                                                  Icon(
+                                                                    Icons.fullscreen,
+                                                                    size: 16,
+                                                                    color: Colors.blue[600],
+                                                                  ),
+                                                                  const SizedBox(width: 4),
+                                                                  Text(
+                                                                    'Lihat Ukuran Penuh',
+                                                                    style: GoogleFonts.poppins(
+                                                                      fontSize: 11,
+                                                                      color: Colors.blue[600],
+                                                                      fontWeight: FontWeight.w500,
+                                                                    ),
+                                                                  ),
+                                                                ],
                                                               ),
                                                             ),
-                                                            transition:
-                                                                Transition.zoom,
-                                                          );
-                                                        },
-                                                        child: Padding(
-                                                          padding:
-                                                              const EdgeInsets.symmetric(
-                                                                vertical: 4,
-                                                              ),
-                                                          child: Row(
-                                                            children: [
-                                                              Icon(
-                                                                Icons
-                                                                    .fullscreen,
-                                                                size: 14,
-                                                                color: Colors
-                                                                    .blue[600],
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 4,
-                                                              ),
-                                                              Text(
-                                                                'Lihat Ukuran Penuh',
-                                                                style: GoogleFonts.poppins(
-                                                                  fontSize: 10,
-                                                                  color: Colors
-                                                                      .blue[600],
-                                                                ),
-                                                              ),
-                                                            ],
                                                           ),
-                                                        ),
+                                                          InkWell(
+                                                            onTap: () async {
+                                                              final uri = Uri.parse(url);
+                                                              if (!await launchUrl(
+                                                                uri,
+                                                                mode: LaunchMode.externalApplication,
+                                                              )) {
+                                                                Get.snackbar(
+                                                                  'Error',
+                                                                  'Tidak dapat mengunduh gambar',
+                                                                );
+                                                              }
+                                                            },
+                                                            child: Padding(
+                                                              padding: const EdgeInsets.symmetric(
+                                                                vertical: 6,
+                                                                horizontal: 8,
+                                                              ),
+                                                              child: Row(
+                                                                children: [
+                                                                  Icon(
+                                                                    Icons.download_rounded,
+                                                                    size: 16,
+                                                                    color: Colors.green[600],
+                                                                  ),
+                                                                  const SizedBox(width: 4),
+                                                                  Text(
+                                                                    'Unduh Gambar',
+                                                                    style: GoogleFonts.poppins(
+                                                                      fontSize: 11,
+                                                                      color: Colors.green[600],
+                                                                      fontWeight: FontWeight.w500,
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
                                                     ],
                                                   ),

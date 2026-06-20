@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/constants/api_config.dart';
 import 'dart:async';
 import 'package:in_app_update/in_app_update.dart'; // For In-App Updates
 import 'package:flutter/foundation.dart'; // For kDebugMode
@@ -395,13 +397,58 @@ class HomeController extends GetxController {
 
         activeAppointments.assignAll(uniqueData);
         _scheduleAppointmentNotifications(activeAppointments);
+        await _syncAppointmentNotifications(activeAppointments);
       } else {
         activeAppointments.clear();
+        await _syncAppointmentNotifications([]);
       }
     } catch (e) {
       print('Error in _fetchAppointments: $e');
     } finally {
       isLoadingAppointments.value = false;
+    }
+  }
+
+  Future<void> _syncAppointmentNotifications(List<Map<String, dynamic>> activeList) async {
+    try {
+      final fbApi = FirebaseApi();
+
+      // 1. Get all pending notification requests
+      final pendingRequests = await fbApi.getPendingNotificationRequests();
+
+      // 2. Get currently active no_rawat list
+      final List<String> activeIds = activeList.map((apt) => apt['no_rawat'].toString()).toList();
+
+      // 3. Keep track of all no_rawats currently scheduled to store in _box
+      final List<String> scheduledIds = [];
+
+      for (var request in pendingRequests) {
+        if (request.payload != null && request.payload!.isNotEmpty) {
+          try {
+            final decoded = jsonDecode(request.payload!);
+            if (decoded['data'] != null &&
+                decoded['data']['args'] != null &&
+                decoded['data']['args']['no_rawat'] != null) {
+              final String noRawat = decoded['data']['args']['no_rawat'].toString();
+
+              if (!activeIds.contains(noRawat)) {
+                // Appointment is no longer active (completed, canceled, or date passed)
+                await fbApi.cancelNotification(request.id);
+                print("🚫 [LOCAL NOTIF] Canceled obsolete pending notification ID: ${request.id} for no_rawat: $noRawat");
+              } else {
+                scheduledIds.add(noRawat);
+              }
+            }
+          } catch (e) {
+            // Not an appointment reminder payload or json error, ignore
+          }
+        }
+      }
+
+      // 4. Update the stored scheduled list in box
+      await _box.write('scheduled_no_rawat_ids', scheduledIds.toSet().toList());
+    } catch (e) {
+      print("Error syncing appointment notifications: $e");
     }
   }
 
@@ -500,5 +547,31 @@ class HomeController extends GetxController {
 
   void toArticleDetail(ArticleModel article) {
     Get.toNamed(Routes.ARTICLE_DETAIL, arguments: article);
+  }
+
+  Future<void> hubungiPendaftaranWA() async {
+    final String message = "Halo Admin Pendaftaran, saya ingin berkonsultasi / bertanya mengenai pendaftaran pemeriksaan di RSIA Aisyiyah. Mohon bantuannya.";
+    final String encodedMessage = Uri.encodeComponent(message);
+    final Uri waUri = Uri.parse("${ApiConfig.waUrl}?text=$encodedMessage");
+
+    try {
+      if (!await launchUrl(waUri, mode: LaunchMode.externalApplication)) {
+        Get.snackbar(
+          'Gagal',
+          'Tidak dapat membuka aplikasi WhatsApp',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Gagal',
+        'Terjadi kesalahan: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 }

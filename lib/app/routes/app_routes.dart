@@ -14,6 +14,7 @@ abstract class Routes {
   static const POLI_QUEUE = _Paths.POLI_QUEUE;
   static const REGISTER = _Paths.REGISTER;
   static const VACCINATION = _Paths.VACCINATION;
+  static const FORGOT_ACCOUNT = _Paths.FORGOT_ACCOUNT;
 }
 
 abstract class _Paths {
@@ -30,4 +31,5 @@ abstract class _Paths {
   static const POLI_QUEUE = '/poli-queue';
   static const REGISTER = '/register';
   static const VACCINATION = '/vaccination';
+  static const FORGOT_ACCOUNT = '/forgot-account';
 }

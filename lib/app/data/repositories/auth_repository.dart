@@ -34,4 +34,16 @@ class AuthRepository {
       throw e.response?.data ?? {'message': e.message};
     }
   }
+
+  Future<Map<String, dynamic>> forgotAccount(String noKtp, String tglLahir) async {
+    try {
+      final response = await _apiService.client.post(
+        ApiConfig.forgotAccount,
+        data: {'no_ktp': noKtp, 'tgl_lahir': tglLahir},
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw e.response?.data ?? {'message': e.message};
+    }
+  }
 }

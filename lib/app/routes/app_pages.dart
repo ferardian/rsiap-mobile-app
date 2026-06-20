@@ -21,6 +21,8 @@ import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
 import '../modules/vaccination/bindings/vaccination_binding.dart';
 import '../modules/vaccination/views/vaccination_view.dart';
+import '../modules/forgot_account/bindings/forgot_account_binding.dart';
+import '../modules/forgot_account/views/forgot_account_view.dart';
 
 part 'app_routes.dart';
 
@@ -89,6 +91,11 @@ class AppPages {
       name: _Paths.REGISTER,
       page: () => const RegisterView(),
       binding: RegisterBinding(),
+    ),
+    GetPage(
+      name: _Paths.FORGOT_ACCOUNT,
+      page: () => const ForgotAccountView(),
+      binding: ForgotAccountBinding(),
     ),
   ];
 }
