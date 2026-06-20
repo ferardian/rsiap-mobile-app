@@ -4,11 +4,12 @@ import 'package:get_storage/get_storage.dart';
 import 'package:rsiap_mobile_app/app/routes/app_pages.dart';
 import 'package:rsiap_mobile_app/app/bindings/initial_binding.dart';
 import 'package:intl/date_symbol_data_local.dart';
-
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:rsiap_mobile_app/app/services/notification_service.dart';
 import 'package:rsiap_mobile_app/app/data/services/firebase_api.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +53,16 @@ void main() async {
       getPages: AppPages.routes,
       initialBinding: InitialBinding(),
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('id', 'ID'),
+        Locale('en', 'US'),
+      ],
+      locale: const Locale('id', 'ID'),
     ),
   );
 }
