@@ -245,25 +245,25 @@ class ForgotAccountController extends GetxController {
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const SizedBox(height: 24),
-              ElevatedButton.icon(
+              OutlinedButton.icon(
                 onPressed: () {
                   Get.back(); // Close dialog
                   hubungiPendaftaranWA();
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF25D366),
-                  foregroundColor: Colors.white,
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF25D366),
+                  side: const BorderSide(color: Color(0xFF25D366), width: 1.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  elevation: 1,
+                  elevation: 0,
                 ),
                 icon: Image.asset(
                   'assets/icons/wa.png',
                   width: 22,
                   height: 22,
-                  color: Colors.white,
                 ),
                 label: const Text(
                   'Hubungi Pendaftaran via WA',
