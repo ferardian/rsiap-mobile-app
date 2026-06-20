@@ -9,6 +9,7 @@ class ForgotAccountController extends GetxController {
   final AuthRepository _authRepository = Get.find<AuthRepository>();
 
   final nikController = TextEditingController();
+  final dobController = TextEditingController();
   final selectedDate = Rxn<DateTime>();
 
   final isLoading = false.obs;
@@ -26,6 +27,7 @@ class ForgotAccountController extends GetxController {
   @override
   void onClose() {
     nikController.dispose();
+    dobController.dispose();
     super.onClose();
   }
 
@@ -39,6 +41,7 @@ class ForgotAccountController extends GetxController {
     );
     if (picked != null) {
       selectedDate.value = picked;
+      dobController.text = DateFormat('dd MMMM yyyy', 'id_ID').format(picked);
     }
   }
 

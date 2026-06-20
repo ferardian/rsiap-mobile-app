@@ -72,64 +72,20 @@ class ForgotAccountView extends GetView<ForgotAccountController> {
             const SizedBox(height: 20),
 
             // Date of Birth Input
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tanggal Lahir',
-                  style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary.withOpacity(0.8),
+            GestureDetector(
+              onTap: () => controller.selectDate(context),
+              child: AbsorbPointer(
+                child: CustomTextField(
+                  controller: controller.dobController,
+                  label: 'Tanggal Lahir',
+                  hint: 'Pilih Tanggal Lahir',
+                  prefixIcon: const Icon(
+                    Icons.calendar_today_outlined,
+                    color: AppColors.primary,
+                    size: 22,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Obx(
-                  () => InkWell(
-                    onTap: () => controller.selectDate(context),
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 18,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200, width: 1.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.05),
-                            spreadRadius: 2,
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today_outlined,
-                            color: AppColors.primary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            controller.displayDate,
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: controller.selectedDate.value != null
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary.withOpacity(0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 36),
 
