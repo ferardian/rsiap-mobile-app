@@ -33,22 +33,38 @@ class HomeView extends GetView<HomeController> {
         body: RefreshIndicator(
           onRefresh: () => controller.refreshData(),
           child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildModernHeader(context),
-                const SizedBox(height: 20),
-                _buildQuickActions(),
-                const SizedBox(height: 20),
-                _buildWhatsAppContactBanner(context),
-                const SizedBox(height: 12),
-                _buildActiveAppointments(),
-                _buildArticlesSection(),
-                const SizedBox(height: 24),
-                _buildFacilitiesSection(),
-                const SizedBox(height: 130),
-              ],
-            ),
+            child: Obx(() {
+              final hasBooking = !controller.isLoadingAppointments.value &&
+                  controller.activeAppointments.where((appointment) {
+                    final poliName = (appointment['poliklinik']?['nm_poli'] ?? '')
+                        .toString()
+                        .toLowerCase();
+                    return poliName.contains('anak') || poliName.contains('kandungan');
+                  }).isNotEmpty;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildModernHeader(context),
+                  const SizedBox(height: 20),
+                  _buildQuickActions(),
+                  const SizedBox(height: 20),
+                  if (!hasBooking) ...[
+                    _buildWhatsAppContactBanner(context),
+                    const SizedBox(height: 12),
+                  ],
+                  _buildActiveAppointments(),
+                  if (hasBooking) ...[
+                    _buildWhatsAppContactBanner(context),
+                    const SizedBox(height: 20),
+                  ],
+                  _buildArticlesSection(),
+                  const SizedBox(height: 24),
+                  _buildFacilitiesSection(),
+                  const SizedBox(height: 130),
+                ],
+              );
+            }),
           ),
         ),
       ),

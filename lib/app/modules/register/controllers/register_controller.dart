@@ -26,6 +26,7 @@ class RegisterController extends GetxController {
   final otpController = TextEditingController();
   final receivedOtp = RxnString(); // Temporary for dev/testing
   final regToken = RxnString(); // Token from verified OTP
+  final isOtpSent = false.obs;
 
   // Step 3: Biodata
   final nameController = TextEditingController();
@@ -59,6 +60,8 @@ class RegisterController extends GetxController {
 
   // Step 4: KTP
   final ktpFile = Rxn<XFile>();
+  final isOcrBypassed = false.obs;
+
 
   // Result
   final regResult = Rxn<Map<String, dynamic>>();
@@ -67,6 +70,12 @@ class RegisterController extends GetxController {
   void onInit() {
     super.onInit();
     fetchPropinsi();
+    phoneController.addListener(() {
+      isOtpSent.value = false;
+      regToken.value = null;
+      receivedOtp.value = null;
+      otpController.clear();
+    });
   }
 
   @override
@@ -153,12 +162,14 @@ class RegisterController extends GetxController {
   }
 
   void nextStep() {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (currentStep.value < 3) {
       currentStep.value++;
     }
   }
 
   void previousStep() {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (currentStep.value > 0) {
       currentStep.value--;
     }
@@ -339,6 +350,7 @@ class RegisterController extends GetxController {
 
       if (response.data['success'] == true) {
         receivedOtp.value = response.data['data']['otp']?.toString(); // Debug
+        isOtpSent.value = true;
         Get.snackbar(
           'Sukses',
           'OTP berhasil dikirim via WhatsApp',
@@ -434,7 +446,10 @@ class RegisterController extends GetxController {
     if (image != null) {
       final isValid = await _verifyNikFromImage(image);
       if (isValid) {
+        isOcrBypassed.value = false;
         ktpFile.value = image;
+      } else {
+        await _showBypassDialog(image);
       }
     }
   }
@@ -450,7 +465,11 @@ class RegisterController extends GetxController {
         inputImage,
       );
 
-      String fullText = recognizedText.text.replaceAll(RegExp(r'\s+'), '');
+      // Clean whitespaces and do character correction (e.g. O->0, I/l->1) to make it robust
+      String fullText = recognizedText.text
+          .replaceAll(RegExp(r'\s+'), '')
+          .replaceAll(RegExp(r'[oO]'), '0')
+          .replaceAll(RegExp(r'[iIlL]'), '1');
       await textRecognizer.close();
 
       String targetNik = nikController.text;
@@ -468,13 +487,6 @@ class RegisterController extends GetxController {
       }
 
       if (!foundMatchingNik) {
-        Get.snackbar(
-          'Verifikasi Gagal',
-          'NIK ($targetNik) tidak ditemukan pada foto. Pastikan foto KTP/KK jelas dan NIK terbaca.',
-          backgroundColor: Colors.orange,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 5),
-        );
         return false;
       }
 
@@ -487,16 +499,123 @@ class RegisterController extends GetxController {
       return true;
     } catch (e) {
       print("OCR Error: $e");
-      Get.snackbar(
-        'Error',
-        'Gagal memverifikasi dokumen: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
       return false;
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> _showBypassDialog(XFile image) async {
+    await Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 48,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Verifikasi Tidak Berhasil',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'NIK (${nikController.text}) tidak terdeteksi pada foto. Anda dapat mengambil ulang foto dengan posisi lebih jelas, atau tetap menggunakan foto ini jika data sudah benar.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back(); // Close Dialog
+                        pickKtp(); // Trigger camera again
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        'Ambil Ulang Foto',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        isOcrBypassed.value = true;
+                        ktpFile.value = image;
+                        Get.back(); // Close Dialog
+                        Get.snackbar(
+                          'Foto Disimpan',
+                          'Foto KTP disimpan tanpa verifikasi otomatis.',
+                          backgroundColor: Colors.orange,
+                          colorText: Colors.white,
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(
+                          color: AppColors.textSecondary.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        'Tetap Gunakan Foto Ini',
+                        style: GoogleFonts.poppins(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
   }
 
   Future<void> submitRegistration() async {

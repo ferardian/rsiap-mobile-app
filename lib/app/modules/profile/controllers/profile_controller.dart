@@ -91,6 +91,10 @@ class ProfileController extends GetxController {
                                 // Cleanup notifications and topics before clearing token
                                 await FirebaseApi().logoutCleanup();
                                 box.remove('token');
+                                box.remove('user');
+                                box.remove('is_guest');
+                                _homeController.user.value = null;
+                                _homeController.activeAppointments.clear();
                                 Get.offAllNamed(Routes.LOGIN);
                               },
                         style: ElevatedButton.styleFrom(

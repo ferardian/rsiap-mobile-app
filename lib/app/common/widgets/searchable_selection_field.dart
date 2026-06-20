@@ -46,7 +46,10 @@ class SearchableSelectionField extends StatelessWidget {
         InkWell(
           onTap: (items.isEmpty && !isLoading)
               ? null
-              : () => _showSearchDialog(context),
+              : () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  _showSearchDialog(context);
+                },
           borderRadius: BorderRadius.circular(12),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -147,7 +150,10 @@ class SearchableSelectionField extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () => Get.back(),
+                    onPressed: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      Get.back();
+                    },
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),
@@ -234,7 +240,7 @@ class SearchableSelectionField extends StatelessWidget {
                               )
                             : null,
                         onTap: () {
-                          FocusScope.of(context).unfocus();
+                          FocusManager.instance.primaryFocus?.unfocus();
                           onSelected(value); // We still pass ID for logic
                           Get.back();
                         },

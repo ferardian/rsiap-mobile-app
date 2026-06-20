@@ -31,8 +31,8 @@ class LoginController extends GetxController {
   void onReady() {
     super.onReady();
     _checkForUpdate();
-    // Check if already logged in or entered as guest
-    if (_box.hasData('token') || _box.read('is_guest') == true) {
+    // Check if already logged in (ignore guest status to allow login screen on next launch)
+    if (_box.hasData('token')) {
       Get.offAllNamed(Routes.HOME);
     }
   }

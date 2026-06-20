@@ -630,6 +630,27 @@ class FirebaseApi {
       }
     }
   }
+
+  Future<void> cancelAppointmentNotifications(String noRawat) async {
+    try {
+      final id = noRawat.hashCode;
+      await _localNotification.cancel(id: id + 2);
+      await _localNotification.cancel(id: id + 3);
+      await _localNotification.cancel(id: id + 20);
+      await _localNotification.cancel(id: id + 30);
+      print("🚫 [LOCAL NOTIF] Cancelled notifications for appointment: $noRawat");
+    } catch (e) {
+      print("⚠️ [LOCAL NOTIF] Failed to cancel notifications for $noRawat: $e");
+    }
+  }
+
+  Future<List<fln.PendingNotificationRequest>> getPendingNotificationRequests() async {
+    return await _localNotification.pendingNotificationRequests();
+  }
+
+  Future<void> cancelNotification(int id) async {
+    await _localNotification.cancel(id: id);
+  }
 }
 
 // Top-level function for background handling

@@ -14,43 +14,55 @@ class RegisterView extends GetView<RegisterController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Daftar Pasien Baru',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white, // Prevents Material 3 color shift
-        scrolledUnderElevation: 0, // Keeps it flat when scrolled under
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Get.back(),
-        ),
-      ),
-      body: Obx(() {
-        if (controller.regResult.value != null) {
-          return _buildSuccessView();
-        }
-        return Column(
-          children: [
-            _buildProgressIndicator(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: _buildCurrentStep(),
+    return Obx(() {
+      return PopScope(
+        canPop: controller.currentStep.value == 0,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          controller.previousStep();
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: Text(
+              'Daftar Pasien Baru',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
             ),
-            _buildBottomButtons(),
-          ],
-        );
-      }),
-    );
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white, // Prevents Material 3 color shift
+            scrolledUnderElevation: 0, // Keeps it flat when scrolled under
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              onPressed: () {
+                if (controller.currentStep.value > 0) {
+                  controller.previousStep();
+                } else {
+                  Get.back();
+                }
+              },
+            ),
+          ),
+          body: controller.regResult.value != null
+              ? _buildSuccessView()
+              : Column(
+                  children: [
+                    _buildProgressIndicator(),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: _buildCurrentStep(),
+                      ),
+                    ),
+                    _buildBottomButtons(),
+                  ],
+                ),
+        ),
+      );
+    });
   }
 
   Widget _buildProgressIndicator() {
@@ -345,8 +357,11 @@ class RegisterView extends GetView<RegisterController> {
               controller.selectedPropinsi.value = val;
               final item = controller.propinsiList.firstWhere(
                 (e) => e['kd_prop'].toString() == val,
+                orElse: () => null,
               );
-              controller.selectedPropinsiName.value = item['nm_prop'];
+              if (item != null) {
+                controller.selectedPropinsiName.value = item['nm_prop'];
+              }
               controller.fetchKabupaten(val);
             },
           ),
@@ -367,8 +382,11 @@ class RegisterView extends GetView<RegisterController> {
               controller.selectedKabupaten.value = val;
               final item = controller.kabupatenList.firstWhere(
                 (e) => e['kd_kab'].toString() == val,
+                orElse: () => null,
               );
-              controller.selectedKabupatenName.value = item['nm_kab'];
+              if (item != null) {
+                controller.selectedKabupatenName.value = item['nm_kab'];
+              }
               controller.fetchKecamatan(val);
             },
           ),
@@ -389,8 +407,11 @@ class RegisterView extends GetView<RegisterController> {
               controller.selectedKecamatan.value = val;
               final item = controller.kecamatanList.firstWhere(
                 (e) => e['kd_kec'].toString() == val,
+                orElse: () => null,
               );
-              controller.selectedKecamatanName.value = item['nm_kec'];
+              if (item != null) {
+                controller.selectedKecamatanName.value = item['nm_kec'];
+              }
               controller.fetchKelurahan(val);
             },
           ),
@@ -411,8 +432,11 @@ class RegisterView extends GetView<RegisterController> {
               controller.selectedKelurahan.value = val;
               final item = controller.kelurahanList.firstWhere(
                 (e) => e['kd_kel'].toString() == val,
+                orElse: () => null,
               );
-              controller.selectedKelurahanName.value = item['nm_kel'];
+              if (item != null) {
+                controller.selectedKelurahanName.value = item['nm_kel'];
+              }
             },
           ),
         ),
@@ -531,6 +555,35 @@ class RegisterView extends GetView<RegisterController> {
             }
           }),
         ),
+        Obx(() {
+          if (controller.ktpFile.value != null && controller.isOcrBypassed.value) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Foto disimpan tanpa verifikasi otomatis. Pastikan foto KTP/KK sudah jelas.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.orange[800],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          return const SizedBox.shrink();
+        }),
         const SizedBox(height: 24),
         _buildInfoCard(
           'Keamanan Data',
@@ -600,7 +653,9 @@ class RegisterView extends GetView<RegisterController> {
                     : Text(
                         controller.currentStep.value == 3
                             ? 'Kirim Pendaftaran'
-                            : 'Lanjutkan',
+                            : (controller.currentStep.value == 1 && !controller.isOtpSent.value)
+                                ? 'Kirim Kode OTP'
+                                : 'Lanjutkan',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -615,12 +670,19 @@ class RegisterView extends GetView<RegisterController> {
   }
 
   void _handleNext() {
+    FocusManager.instance.primaryFocus?.unfocus();
     switch (controller.currentStep.value) {
       case 0:
         controller.checkNik();
         break;
       case 1:
-        controller.verifyOtp();
+        if (controller.regToken.value != null) {
+          controller.nextStep();
+        } else if (!controller.isOtpSent.value) {
+          controller.sendOtp();
+        } else {
+          controller.verifyOtp();
+        }
         break;
       case 2:
         controller.validateBiodata();
