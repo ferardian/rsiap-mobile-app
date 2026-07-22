@@ -108,9 +108,15 @@ class LoginController extends GetxController {
       // Subscribe to FCM Topics
       if (Firebase.apps.isNotEmpty) {
         try {
-          await FirebaseMessaging.instance.subscribeToTopic('pasien');
+          await FirebaseMessaging.instance.subscribeToTopic('pasien').timeout(
+            const Duration(seconds: 1),
+            onTimeout: () => print("[FCM] Subscribe 'pasien' timed out"),
+          );
           final topicName = "pasien_${user.noRkmMedis.replaceAll('/', '')}";
-          await FirebaseMessaging.instance.subscribeToTopic(topicName);
+          await FirebaseMessaging.instance.subscribeToTopic(topicName).timeout(
+            const Duration(seconds: 1),
+            onTimeout: () => print("[FCM] Subscribe '$topicName' timed out"),
+          );
           print("[FCM] Subscribed to topic on login: $topicName");
         } catch (e) {
           print("[FCM] Failed to subscribe to topic on login: $e");

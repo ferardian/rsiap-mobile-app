@@ -500,13 +500,19 @@ class FirebaseApi {
   Future<void> logoutCleanup() async {
     try {
       // 1. Cancel all scheduled local notifications
-      await _localNotification.cancelAll();
+      await _localNotification.cancelAll().timeout(
+        const Duration(seconds: 1),
+        onTimeout: () => print("[FCM] Cancel all notifications timed out"),
+      );
       print("[FCM] All local notifications cancelled.");
 
       final fm = _firebaseMessaging;
       if (fm != null) {
         // 2. Unsubscribe from general patient topic
-        await fm.unsubscribeFromTopic('pasien');
+        await fm.unsubscribeFromTopic('pasien').timeout(
+          const Duration(seconds: 1),
+          onTimeout: () => print("[FCM] Unsubscribe 'pasien' timed out"),
+        );
 
         // 3. Unsubscribe from specific patient topic if user data exists
         final box = GetStorage();
@@ -514,7 +520,10 @@ class FirebaseApi {
         if (user != null && user['no_rkm_medis'] != null) {
           final rkm = user['no_rkm_medis'].toString().replaceAll('/', '');
           final topicName = "pasien_$rkm";
-          await fm.unsubscribeFromTopic(topicName);
+          await fm.unsubscribeFromTopic(topicName).timeout(
+            const Duration(seconds: 1),
+            onTimeout: () => print("[FCM] Unsubscribe '$topicName' timed out"),
+          );
           print("[FCM] Unsubscribed from topic: $topicName");
         }
       } else {

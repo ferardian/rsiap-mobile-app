@@ -64,10 +64,16 @@ class HomeController extends GetxController {
     if (Firebase.apps.isNotEmpty) {
       () async {
         try {
-          await FirebaseMessaging.instance.subscribeToTopic('pasien');
+          await FirebaseMessaging.instance.subscribeToTopic('pasien').timeout(
+            const Duration(seconds: 1),
+            onTimeout: () => print("[FCM] Subscribe 'pasien' timed out"),
+          );
           if (user.value?.noRkmMedis != null) {
             final topicName = "pasien_${user.value!.noRkmMedis.replaceAll('/', '')}";
-            await FirebaseMessaging.instance.subscribeToTopic(topicName);
+            await FirebaseMessaging.instance.subscribeToTopic(topicName).timeout(
+              const Duration(seconds: 1),
+              onTimeout: () => print("[FCM] Subscribe '$topicName' timed out"),
+            );
             print("📡 FCM: Subscribed to user topic: $topicName");
           } else {
             print("⚠️ FCM: Could not subscribe to user topic (RM is null)");
