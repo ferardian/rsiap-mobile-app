@@ -54,11 +54,13 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Aplikasi membutuhkan akses galeri untuk menyimpan gambar hasil pemeriksaan radiologi.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi membutuhkan akses kamera untuk mengambil foto KTP/Identitas pasien saat melakukan pendaftaran online.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Aplikasi membutuhkan akses galeri untuk memilih atau menyimpan gambar.</string>
+	<string>Aplikasi membutuhkan akses galeri foto untuk memilih atau menyimpan dokumen foto identitas pasien.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Aplikasi membutuhkan izin menyimpan berkas gambar atau dokumen ke galeri foto perangkat Anda.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aplikasi membutuhkan akses mikrofon jika fitur kamera perekaman video digunakan.</string>
 </dict>
 </plist>

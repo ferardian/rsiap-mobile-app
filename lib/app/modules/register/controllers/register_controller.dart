@@ -439,18 +439,30 @@ class RegisterController extends GetxController {
 
   // --- Step 4 Actions ---
   Future<void> pickKtp() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 50, // Reduced from 80 to ensure size < 2MB
-    );
-    if (image != null) {
-      final isValid = await _verifyNikFromImage(image);
-      if (isValid) {
-        isOcrBypassed.value = false;
-        ktpFile.value = image;
-      } else {
-        await _showBypassDialog(image);
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 70,
+      );
+      if (image != null) {
+        final isValid = await _verifyNikFromImage(image);
+        if (isValid) {
+          isOcrBypassed.value = false;
+          ktpFile.value = image;
+        } else {
+          await _showBypassDialog(image);
+        }
       }
+    } catch (e) {
+      print("Camera pick error: $e");
+      Get.snackbar(
+        'Gagal Ambil Foto',
+        'Terjadi kesalahan saat mengoperasikan kamera: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 
