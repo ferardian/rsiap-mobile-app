@@ -345,7 +345,11 @@ class RegisterController extends GetxController {
       isLoading.value = true;
       final response = await _apiService.client.post(
         'pasien/auth/register/send-otp',
-        data: {'no_telp': phoneController.text},
+        data: {
+          'no_telp': phoneController.text,
+          if (emailController.text.trim().isNotEmpty)
+            'email': emailController.text.trim(),
+        },
       );
 
       if (response.data['success'] == true) {
@@ -353,7 +357,7 @@ class RegisterController extends GetxController {
         isOtpSent.value = true;
         Get.snackbar(
           'Sukses',
-          'OTP berhasil dikirim via WhatsApp',
+          response.data['message'] ?? 'OTP berhasil dikirim',
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
@@ -391,7 +395,12 @@ class RegisterController extends GetxController {
       isLoading.value = true;
       final response = await _apiService.client.post(
         'pasien/auth/register/verify-otp',
-        data: {'no_telp': phoneController.text, 'otp': otpController.text},
+        data: {
+          'no_telp': phoneController.text,
+          if (emailController.text.trim().isNotEmpty)
+            'email': emailController.text.trim(),
+          'otp': otpController.text,
+        },
       );
 
       if (response.data['success'] == true) {

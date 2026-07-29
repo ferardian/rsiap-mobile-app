@@ -175,8 +175,8 @@ class RegisterView extends GetView<RegisterController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildStepHeader(
-          'Verifikasi Nomor HP',
-          'Kami akan mengirimkan kode verifikasi (OTP) melalui WhatsApp ke nomor HP Anda.',
+          'Verifikasi Kontak (OTP)',
+          'Kami akan mengirimkan kode verifikasi (OTP) melalui WhatsApp dan Email Anda.',
         ),
         const SizedBox(height: 32),
         CustomTextField(
@@ -185,6 +185,14 @@ class RegisterView extends GetView<RegisterController> {
           hint: 'Contoh: 08123456789',
           keyboardType: TextInputType.phone,
           prefixIcon: const Icon(Icons.phone_android, color: AppColors.primary),
+        ),
+        const SizedBox(height: 16),
+        CustomTextField(
+          controller: controller.emailController,
+          label: 'Email (Opsional untuk OTP Email)',
+          hint: 'Contoh: pasien@email.com',
+          keyboardType: TextInputType.emailAddress,
+          prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
         ),
         const SizedBox(height: 12),
         Row(
