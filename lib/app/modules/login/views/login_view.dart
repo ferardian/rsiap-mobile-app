@@ -43,27 +43,18 @@ class LoginView extends GetView<LoginController> {
               right: 0,
               height: screenHeight * 0.52, // Covers top 52% of the screen
               child: Image.asset(
-                'assets/illustrations/login_illustration.png',
+                'assets/ilustrations/login_illustration.png',
                 fit: BoxFit.cover,
                 alignment: Alignment.bottomCenter,
                 width: MediaQuery.of(context).size.width,
                 errorBuilder: (context, error, stackTrace) {
-                  // Fallback check for assets spelling variant
-                  return Image.asset(
-                    'assets/ilustrations/login_illustration.png',
-                    fit: BoxFit.cover,
-                    alignment: Alignment.bottomCenter,
-                    width: MediaQuery.of(context).size.width,
-                    errorBuilder: (ctx, err, st) {
-                      return Container(
-                        color: AppColors.primary.withOpacity(0.1),
-                        child: const Icon(
-                          Icons.medical_services,
-                          size: 80,
-                          color: AppColors.primary,
-                        ),
-                      );
-                    },
+                  return Container(
+                    color: AppColors.primary.withOpacity(0.1),
+                    child: const Icon(
+                      Icons.medical_services,
+                      size: 80,
+                      color: AppColors.primary,
+                    ),
                   );
                 },
               ),
