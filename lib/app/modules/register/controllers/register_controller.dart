@@ -334,7 +334,17 @@ class RegisterController extends GetxController {
     if (phoneController.text.isEmpty) {
       Get.snackbar(
         'Error',
-        'Nomor telepon harus diisi',
+        'Nomor WhatsApp harus diisi',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    if (emailController.text.trim().isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Email harus diisi untuk menerima kode OTP',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -347,8 +357,7 @@ class RegisterController extends GetxController {
         'pasien/auth/register/send-otp',
         data: {
           'no_telp': phoneController.text,
-          if (emailController.text.trim().isNotEmpty)
-            'email': emailController.text.trim(),
+          'email': emailController.text.trim(),
         },
       );
 

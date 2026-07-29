@@ -189,7 +189,7 @@ class RegisterView extends GetView<RegisterController> {
         const SizedBox(height: 16),
         CustomTextField(
           controller: controller.emailController,
-          label: 'Email (Opsional untuk OTP Email)',
+          label: 'Alamat Email',
           hint: 'Contoh: pasien@email.com',
           keyboardType: TextInputType.emailAddress,
           prefixIcon: const Icon(Icons.email_outlined, color: AppColors.primary),
