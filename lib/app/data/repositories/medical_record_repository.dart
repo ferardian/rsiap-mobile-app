@@ -37,7 +37,7 @@ class MedicalRecordRepository {
     try {
       final filters = [
         {"field": "no_rkm_medis", "operator": "=", "value": noRkmMedis},
-        {"field": "stts", "operator": "=", "value": "Sudah"},
+        {"field": "stts", "operator": "!=", "value": "Batal"},
       ];
 
       if (tanggalDari != null) {
